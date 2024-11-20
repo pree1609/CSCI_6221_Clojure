@@ -1,87 +1,67 @@
-(ns user-input-example
+(ns algorithm-visualizer
   (:gen-class))
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn bubble-sort []
-  ;; Prompt user for input
+;;//////////////////////////////////////////////////BUBBLE SORT//////////////////////////////////////////////////
+(defn bubble-sort-visualizer []
   (println "Please enter an array of space-separated integers to sort:")
 
-  ;; Read and parse user input
   (let [user-input (read-line)
         input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
 
-    (println "Input array:" input-array)
+    (println "\nInput array:" input-array)
 
-    ;; Bubble sort implementation with enhanced visualization
-    (let [n (count input-array)]
+    (let [n (count input-array)
+          colorize (fn [text color]
+                     (str "\033[" color "m" text "\033[0m")) 
+          format-array (fn [arr pointer-index1 pointer-index2]
+                         (apply str
+                                (map-indexed
+                                 (fn [idx val]
+                                   (cond
+                                     (= idx pointer-index1) (colorize (format "%4d" val) "31") 
+                                     (= idx pointer-index2) (colorize (format "%4d" val) "31")
+                                     :else (format "%4d" val)))
+                                 arr)))]
       (loop [arr input-array i 0 swapped true]
         (if (and swapped (< i n))
           (do
-            (println (str "\nStep " (inc i) ":"))
+            (println (str "\n=== Pass " (inc i) " ==="))
 
-            ;; Inner loop for comparisons and swaps
             (let [[new-arr swap]
                   (reduce (fn [[acc swapped] j]
-                            (println (str "  Comparing " (acc j) " and " (acc (inc j))
-                                          (if (> (acc j) (acc (inc j)))
-                                            " => Swap needed!"
-                                            " => No swap needed")))
-                            ;; Swap elements if necessary
+                            (let [array-str (format-array acc j (inc j))
+                                  pointer (apply str
+                                                 (map-indexed
+                                                  (fn [idx _]
+                                                    (if (= idx j)
+                                                      "    ^"
+                                                      "     "))
+                                                  acc))]
+                              (println array-str)
+                              (println pointer))
+
                             (if (> (acc j) (acc (inc j)))
-                              [(assoc acc j (acc (inc j)) (inc j) (acc j)) true]
-                              [acc swapped]))
+                              (do
+                                (println (colorize "    => Swap needed!" "33"))
+                                [(assoc acc j (acc (inc j)) (inc j) (acc j)) true])
+                              (do
+                                (println "    => No swap needed")
+                                [acc swapped])))
                           [arr false]
                           (range 0 (- n i 1)))]
 
-              ;; Print the array after each pass
-              (println "  Array after pass:" new-arr "\n")
+              (println "\n  Array after pass:" new-arr "\n")
+              (Thread/sleep 500)
               (recur new-arr (inc i) swap)))
-          ;; When sorting is complete
-          (println "Sorted array:" arr))))))
-
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn insertion-sort []
-  ;; Prompt user for input
-  (println "Please enter an array of space-separated integers to sort:")
-  
-  ;; Read and parse user input
-  (let [user-input (read-line)
-        input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
-    
-    (println "Input array:" input-array)
-    
-    ;; Insertion sort implementation with visualization
-    (let [n (count input-array)]
-      (loop [arr input-array i 1]
-        (if (< i n)
           (do
-            (println (str "\nStep " i ":"))
-            
-            ;; Initialize key (the element to be inserted) and the index j
-            (let [key (arr i)
-                  j (atom (dec i))
-                  mutable-arr (atom arr)]
-              
-              ;; Move elements that are greater than the key one position ahead
-              (while (and (>= @j 0) (> (@mutable-arr @j) key))
-                (println (str "  Comparing key " key " with " (@mutable-arr @j) " => Shift " (@mutable-arr @j)))
-                (swap! mutable-arr assoc (inc @j) (@mutable-arr @j))
-                (swap! j dec))
-              
-              ;; Insert the key at the correct position
-              (swap! mutable-arr assoc (inc @j) key)
-              (println (str "  Insert key " key " at position " (inc @j)))
-              (println "  Array after pass:" @mutable-arr "\n")
-              
-              ;; Recur with the updated array
-              (recur @mutable-arr (inc i))))
-          
-          ;; When sorting is complete
-          (println "Sorted array:" arr))))))
+            (println "=== Sorting Complete ===")
+            (println "Sorted array:" arr)
+            (println "The best-case time complexity for the bubble sort algorithm is O(n) and the worst-case time complexity for the bubble sort algorithm is O(n^2)")
+            (println "The space complexity for the bubble sort algorithm is O(1)")))))))
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn merge-sort []
-  ;; Prompt user for input
+
+;;//////////////////////////////////////////////////INSERTION SORT//////////////////////////////////////////////////
+(defn insertion-sort-visualizer []
   (println "Please enter an array of space-separated integers to sort:")
 
   ;; Read and parse user input
@@ -90,23 +70,100 @@
 
     (println "\nInput array:" input-array)
 
-    ;; Internal merge function to merge two sorted subarrays with visualization
-    (letfn [(merge [left right]
-              (println "Merging:" left "and" right)
+    (let [n (count input-array)
+          colorize (fn [text color]
+                     (str "\033[" color "m" text "\033[0m"))
+          format-array (fn [arr pointer-key pointer-j]
+                         (apply str
+                                (map-indexed
+                                 (fn [idx val]
+                                   (cond
+                                     (= idx pointer-key) (colorize (format "%4d" val) "33")
+                                     (= idx pointer-j) (colorize (format "%4d" val) "31")
+                                     :else (format "%4d" val)))
+                                 arr)))]
+      (loop [arr input-array i 1]
+        (if (< i n)
+          (do
+            (println (str "\n=== Step " i " ==="))
+            (let [key (arr i)
+                  j (atom (dec i))
+                  mutable-arr (atom arr)]
+
+              (println "Initial array:")
+              (println (format-array arr i @j))
+
+              (while (and (>= @j 0) (> (@mutable-arr @j) key))
+                (println (str "  Comparing key " key " with " (@mutable-arr @j)))
+                (println (format-array @mutable-arr i @j))
+                (println "    => Shift" (@mutable-arr @j))
+                (swap! mutable-arr assoc (inc @j) (@mutable-arr @j))
+                (swap! j dec))
+
+              (swap! mutable-arr assoc (inc @j) key)
+              (println "  Insert key at position" (inc @j))
+              (println (format-array @mutable-arr i nil))
+              (println "  Array after pass:" @mutable-arr "\n")
+
+              (recur @mutable-arr (inc i))))
+          (do
+            (println "=== Sorting Complete ===")
+            (println "Sorted array:" arr)
+            (println "The best-case time complexity for the insertion sort algorithm is O(n) and the worst-case time complexity for the insertion sort algorithm is O(n^2)")
+            (println "The space complexity for the insertion sort algorithm is O(1)")))))))
+
+
+
+;;//////////////////////////////////////////////////MERGE SORT//////////////////////////////////////////////////
+(defn merge-sort-visualizer []
+  (println "Please enter an array of space-separated integers to sort:")
+
+  (let [user-input (read-line)
+        input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
+
+    (println "\nInput array:" input-array)
+
+    (letfn [(colorize [text color]
+              (str "\033[" color "m" text "\033[0m")) 
+            (format-array [arr]
+              (apply str (map #(format "%4d" %) arr)))
+            (merge [left right]
+              (println "\nMerging:")
+              (println "Left : " (format-array left))
+              (println "Right: " (format-array right))
+
               (loop [result [] l left r right]
                 (cond
-                  (empty? l) (do
-                               (println "Merged result:" (concat result r))
-                               (concat result r))
-                  (empty? r) (do
-                               (println "Merged result:" (concat result l))
-                               (concat result l))
-                  (< (first l) (first r))
-                  (recur (conj result (first l)) (rest l) r)
-                  :else
-                  (recur (conj result (first r)) l (rest r)))))
+                  (empty? l)
+                  (do
+                    (println "  Remaining right appended: " (format-array r))
+                    (println "  Merged result: " (format-array (concat result r)))
+                    (concat result r))
 
-            ;; Recursive merge sort helper function with visualization
+                  (empty? r)
+                  (do
+                    (println "  Remaining left appended: " (format-array l))
+                    (println "  Merged result: " (format-array (concat result l)))
+                    (concat result l))
+
+                  (< (first l) (first r))
+                  (do
+                    (println "  Comparing: "
+                             (colorize (format "%d" (first l)) "33")
+                             "and"
+                             (colorize (format "%d" (first r)) "31"))
+                    (println "    => Taking: " (first l))
+                    (recur (conj result (first l)) (rest l) r))
+
+                  :else
+                  (do
+                    (println "  Comparing: "
+                             (colorize (format "%d" (first l)) "33")
+                             "and"
+                             (colorize (format "%d" (first r)) "31"))
+                    (println "    => Taking: " (first r))
+                    (recur (conj result (first r)) l (rest r))))))
+
             (merge-sort-helper [arr]
               (let [n (count arr)]
                 (if (<= n 1)
@@ -114,94 +171,111 @@
                   (let [mid (quot n 2)
                         left (subvec arr 0 mid)
                         right (subvec arr mid n)]
-                    (println "\nSplitting:" arr "into" left "and" right)
+                    (println "\nSplitting:")
+                    (println "Array : " (format-array arr))
+                    (println "Into   : " (format-array left) "and" (format-array right))
                     (merge (merge-sort-helper left) (merge-sort-helper right))))))]
 
-      ;; Start the merge sort process and print the final sorted array
       (let [sorted-array (merge-sort-helper input-array)]
-        (println "\nSorted array:" sorted-array)))))
+        (println "\n=== Sorting Complete ===")
+        (println "Sorted array:" (format-array sorted-array))
+        (println "The best-case time complexity for the merge sort algorithm is O(n log n) and the worst-case time complexity for the merge sort algorithm is O(n log n)")
+        (println "The space complexity for the merge sort algorithm is O(n)")))))
 
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn quick-sort []
-  ;; Prompt user for input
+
+;;//////////////////////////////////////////////////QUICK SORT//////////////////////////////////////////////////
+(defn quick-sort-visualizer []
   (println "Please enter an array of space-separated integers to sort:")
 
-  ;; Read and parse user input
   (let [user-input (read-line)
         input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
 
     (println "\nInput array:" input-array)
 
-    ;; Internal partition function to partition the array around the pivot with visualization
-    (letfn [(partition [arr low high]
+    (letfn [(colorize [text color]
+              (str "\033[" color "m" text "\033[0m"))
+            (format-array [arr pivot-index]
+              (map-indexed (fn [idx val]
+                             (if (= idx pivot-index)
+                               (colorize (str val) "33")
+                               (str val))) arr))
+
+            (partition [arr low high]
               (let [pivot (arr high)
-                    index (atom low)]
-                (println (str "\nPartitioning with pivot " pivot ": " arr))
+                    index (atom low)
+                    mutable-arr (atom arr)]
+                (println "\nPartitioning:")
+                (println "Array : " (str (format-array @mutable-arr high)))
+                (println "Pivot : " pivot)
 
-                ;; Iterate and swap elements if necessary
                 (doseq [j (range low high)]
-                  (if (<= (arr j) pivot)
+                  (if (<= (@mutable-arr j) pivot)
                     (do
-                      (println (str "  Swapping " (arr j) " and " (arr @index)))
-                      (swap! index inc)
-                      (swap! index dec)
-                      (let [temp (arr @index)]
-                        (swap! index inc)
-                        (assoc arr @index (arr j))
-                        (assoc arr j temp)))))
+                      (println (str "  Comparing " (@mutable-arr j) " <= " pivot " => True"))
+                      (let [temp (@mutable-arr @index)]
+                        (swap! mutable-arr assoc @index (@mutable-arr j))
+                        (swap! mutable-arr assoc j temp)
+                        (println "  Swapping:" (format-array @mutable-arr high)))
+                      (swap! index inc))
+                    (println (str "  Comparing " (@mutable-arr j) " <= " pivot " => False"))))
 
-                ;; Place pivot in the correct position
-                (println (str "  Placing pivot " pivot " at index " @index))
-                (assoc arr @index pivot)
-                (println "  Array after partition:" arr)
-                @index))
+                (let [temp (@mutable-arr @index)]
+                  (swap! mutable-arr assoc @index pivot)
+                  (swap! mutable-arr assoc high temp))
+                (println "  Placing pivot:" pivot "at index" @index)
+                (println "  Array after partition:" (format-array @mutable-arr @index))
+                [@mutable-arr @index]))
 
-            ;; Recursive quick sort helper function with visualization
             (quick-sort-helper [arr low high]
               (if (< low high)
-                (let [pi (partition arr low high)]
-                  (quick-sort-helper arr low (dec pi))
-                  (quick-sort-helper arr (inc pi) high))
+                (let [[parted-arr pi] (partition arr low high)]
+                  (println (str "\nRecursively sorting left side: [" low ", " (dec pi) "]"))
+                  (let [left-sorted (quick-sort-helper parted-arr low (dec pi))]
+                    (println (str "\nRecursively sorting right side: [" (inc pi) ", " high "]"))
+                    (quick-sort-helper left-sorted (inc pi) high)))
                 arr))]
 
-      ;; Start the quick sort process and print the final sorted array
       (let [sorted-array (quick-sort-helper input-array 0 (dec (count input-array)))]
-        (println "\nSorted array:" sorted-array)))))
+        (println "\n=== Sorting Complete ===")
+        (println "Sorted array:" sorted-array)
+        (println "The best-case time complexity for the quick sort algorithm is O(n log n) and the worst-case time complexity for the quick sort algorithm is O(n^2)")
+        (println "The space complexity for the quick sort algorithm is O(log n)")))))
 
-;; To run this function, call (quick-sort)
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn heap-sort []
-  ;; Prompt user for input
+;;//////////////////////////////////////////////////HEAP SORT//////////////////////////////////////////////////
+(defn heap-sort [] 
   (println "Please enter an array of space-separated integers to sort:")
-  
-  ;; Read and parse user input
+
   (let [user-input (read-line)
         input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
-    
+
     (println "\nInput array:" input-array)
 
-    ;; Function to swap elements in the array
     (letfn [(swap [arr i j]
               (let [temp (arr i)]
                 (assoc arr i (arr j) j temp)))
-            
-            ;; Function to heapify a subtree rooted at index `i`
-            ;; `n` is the size of the heap
+
+          
             (heapify [arr n i]
               (let [largest (atom i)
                     left (inc (* 2 i))
                     right (+ 2 (* 2 i))]
-                (println (str "\nHeapifying at index " i ", left child: " left ", right child: " right))
+                (println (str "\nHeapifying at index " i " (current root: " (arr i) "), left: "
+                              (if (< left n) (str (arr left)) "N/A")
+                              ", right: "
+                              (if (< right n) (str (arr right)) "N/A")))
+
                 (when (and (< left n) (> (arr left) (arr @largest)))
+                  (println (str "  Left child " (arr left) " is greater than root " (arr @largest)))
                   (reset! largest left))
+
                 (when (and (< right n) (> (arr right) (arr @largest)))
+                  (println (str "  Right child " (arr right) " is greater than current largest " (arr @largest)))
                   (reset! largest right))
-                
-                ;; If the largest is not root, swap and continue heapifying
+
                 (if (not= @largest i)
                   (do
                     (println (str "  Swapping " (arr i) " with " (arr @largest)))
@@ -209,18 +283,15 @@
                       (heapify swapped n @largest)))
                   arr)))
 
-            ;; Main function to perform heap sort
             (heap-sort-helper [arr]
               (let [n (count arr)]
-                ;; Build the max heap
                 (println "\nBuilding the max heap:")
-                (loop [i (quot n 2) current-arr arr]
+                (loop [i (dec (quot n 2)) current-arr arr]
                   (if (>= i 0)
                     (let [new-arr (heapify current-arr n i)]
                       (recur (dec i) new-arr))
                     current-arr))
 
-                ;; Extract elements from heap one by one
                 (println "\nSorting the array:")
                 (loop [i (dec n) sorted-arr arr]
                   (if (<= i 0)
@@ -230,32 +301,26 @@
                       (println (str "  Array after extracting max element: " heapified))
                       (recur (dec i) heapified))))))]
 
-      ;; Start heap sort and display the sorted array
       (let [sorted-array (heap-sort-helper input-array)]
-        (println "\nSorted array:" sorted-array)))))
-
-;; To run this function, call (heap-sort)
-
-
+        (println "\nSorted array:" sorted-array)
+        (println "The best-case time complexity for the heap sort algorithm is O(n log n) and the worst-case time complexity for the heap sort algorithm is O(n log n)")
+        (println "The space complexity for the heap sort algorithm is O(1)")))))
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
+
+;;//////////////////////////////////////////////////BINARY-SEARCH//////////////////////////////////////////////////
 (defn binary-search []
-  ;; Prompt user for input
   (println "Please enter a sorted array of space-separated integers:")
-  
-  ;; Read and parse the input array
+
   (let [user-input (read-line)
         input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
-    
-    ;; Ask the user for the target value to search
+
     (println "Please enter the target value to search:")
     (let [target (Integer/parseInt (read-line))]
-      
+
       (println "\nInput array:" input-array)
       (println "Target value:" target)
-      
-      ;; Binary search function with visualization
+
       (letfn [(binary-search-helper [arr left right]
                 (if (<= left right)
                   (let [mid (quot (+ left right) 2)
@@ -264,45 +329,41 @@
                     (println (str "  Middle index: " mid ", Middle value: " mid-value))
 
                     (cond
-                      (= mid-value target) 
+                      (= mid-value target)
                       (do
                         (println (str "  Target found at index " mid))
                         mid)
-                      
-                      (< mid-value target) 
+
+                      (< mid-value target)
                       (do
                         (println (str "  Target is greater than " mid-value))
                         (binary-search-helper arr (inc mid) right))
-                      
-                      (> mid-value target) 
+
+                      (> mid-value target)
                       (do
                         (println (str "  Target is less than " mid-value))
                         (binary-search-helper arr left (dec mid)))))
-                  
+
                   (do
                     (println "  Target not found in the array.")
                     -1)))]
 
-        ;; Start the binary search process
         (let [index (binary-search-helper input-array 0 (dec (count input-array)))]
           (if (not= index -1)
             (println (str "\nThe target value " target " was found at index " index))
             (println (str "\nThe target value " target " is not in the array."))))))))
 
-;; To run this function, call (binary-search)
 
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////
-(defn breadth-first-search []
-  ;; Prompt user for input
-  (println "Please enter the graph as an adjacency list (e.g., A: B C, B: D, C: E, D: , E: ):")
+;;//////////////////////////////////////////////////BREADTH-FIRST-SEARCH//////////////////////////////////////////////////
+(defn visualize-bfs []
+  (println "Welcome to the BFS Visualizer!")
+  (println "Please enter the graph as an adjacency list (e.g., A: B C, B: D, C: E, D: , E: ):") 
 
-  ;; Read and parse the input graph
   (let [user-input (read-line)
         graph-inputs (clojure.string/split user-input #",\s*")
 
-        ;; Parse adjacency list into a Clojure map
         graph (reduce (fn [acc input]
                         (let [[node neighbors] (clojure.string/split input #":\s*")
                               neighbors-list (if (empty? neighbors)
@@ -315,51 +376,44 @@
     (doseq [[node neighbors] graph]
       (println (str "  " node " -> " neighbors)))
 
-    ;; Ask the user for the starting node
     (println "\nPlease enter the starting node:")
     (let [start-node (read-line)]
 
-      ;; BFS algorithm with visualization
-      (letfn [(bfs-helper [graph start]
-                (println "\nStarting Breadth-First Search:")
-                (loop [queue (conj clojure.lang.PersistentQueue/EMPTY start)
-                       visited #{}
-                       result []]
-                  (if (empty? queue)
-                    (do
-                      (println "\nBFS Complete. Visited Nodes:" result)
-                      result)
-                    (let [current (peek queue)
-                          queue (pop queue)]
-                      (if (contains? visited current)
-                        (recur queue visited result)
-                        (do
-                          (println (str "  Visiting Node: " current))
-                          (println (str "  Queue: " queue))
-                          (let [neighbors (get graph current [])
-                                new-neighbors (remove #(contains? visited %) neighbors)
-                                new-queue (apply conj queue new-neighbors)]
-                            (println (str "  Adding neighbors to queue: " new-neighbors))
-                            (recur new-queue (conj visited current) (conj result current)))))))))]
+      (println "\nStarting BFS Visualization...")
+      (loop [queue (conj clojure.lang.PersistentQueue/EMPTY start-node)
+             visited #{}
+             pointer ""]
+        (if (empty? queue)
+          (println "\nBFS Complete!")
+          (let [current (peek queue)
+                queue (pop queue)]
+            (if (contains? visited current)
+              (recur queue visited pointer)
+              (do
+                (let [pointer (str " -> [" current "]")
+                      neighbors (get graph current [])
+                      new-neighbors (remove #(contains? visited %) neighbors)
+                      new-queue (apply conj queue new-neighbors)]
+                  (println (str "\nPointer:" pointer))
+                  (println (str "  Visiting Node: " current))
+                  (println (str "  Neighbors: " neighbors))
+                  (println (str "  Adding to queue: " new-neighbors))
+                  (println (str "  Current Queue: " (vec new-queue)))
 
-        ;; Start BFS traversal
-        (let [traversal-result (bfs-helper graph start-node)]
-          (println "\nTraversal Order:" traversal-result))))))
-
-;; To run this function, call (breadth-first-search)
+                  (recur new-queue (conj visited current) pointer))))))))))
 
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////////////
-(defn depth-first-search []
-  ;; Prompt user for input
+
+
+;;//////////////////////////////////////////////////DEPTH-FIRST-SEARCH//////////////////////////////////////////////////
+(defn visualize-dfs []
+  (println "Welcome to the DFS Visualizer!")
   (println "Please enter the graph as an adjacency list (e.g., A: B C, B: D, C: E, D: , E: ):")
 
-  ;; Read and parse the input graph
   (let [user-input (read-line)
         graph-inputs (clojure.string/split user-input #",\s*")
 
-        ;; Parse adjacency list into a Clojure map
         graph (reduce (fn [acc input]
                         (let [[node neighbors] (clojure.string/split input #":\s*")
                               neighbors-list (if (empty? neighbors)
@@ -372,54 +426,43 @@
     (doseq [[node neighbors] graph]
       (println (str "  " node " -> " neighbors)))
 
-    ;; Ask the user for the starting node
     (println "\nPlease enter the starting node:")
     (let [start-node (read-line)]
 
-      ;; DFS algorithm with visualization
-      (letfn [(dfs-helper [graph start]
-                (println "\nStarting Depth-First Search:")
-                (loop [stack [start]
-                       visited #{}
-                       result []]
-                  (if (empty? stack)
-                    (do
-                      (println "\nDFS Complete. Visited Nodes:" result)
-                      result)
-                    (let [current (peek stack)
-                          stack (pop stack)]
-                      (if (contains? visited current)
-                        (recur stack visited result)
-                        (do
-                          (println (str "  Visiting Node: " current))
-                          (println (str "  Stack: " stack))
-                          (let [neighbors (reverse (get graph current []))
-                                new-neighbors (remove #(contains? visited %) neighbors)
-                                new-stack (into stack new-neighbors)]
-                            (println (str "  Adding neighbors to stack: " new-neighbors))
-                            (recur new-stack (conj visited current) (conj result current)))))))))]
+      (println "\nStarting DFS Visualization...")
+      (loop [stack [start-node]
+             visited #{}
+             pointer ""]
+        (if (empty? stack)
+          (println "\nDFS Complete!")
+          (let [current (peek stack)
+                stack (pop stack)]
+            (if (contains? visited current)
+              (recur stack visited pointer)
+              (do
+                (let [pointer (str " -> [" current "]")
+                      neighbors (get graph current [])
+                      new-neighbors (remove #(contains? visited %) neighbors)
+                      new-stack (into stack (reverse new-neighbors))]
+                  (println (str "\nPointer:" pointer))
+                  (println (str "  Visiting Node: " current))
+                  (println (str "  Neighbors: " neighbors))
+                  (println (str "  Adding to stack: " new-neighbors))
+                  (println (str "  Current Stack: " (vec new-stack)))
 
-        ;; Start DFS traversal
-        (let [traversal-result (dfs-helper graph start-node)]
-          (println "\nTraversal Order:" traversal-result))))))
-
-;; To run this function, call (depth-first-search)
+                  (recur new-stack (conj visited current) pointer))))))))))
 
 
-;;/////////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////SELECTION SORT//////////////////////////////////////////////////
 (defn selection-sort []
-  ;; Prompt user for input
   (println "Please enter an array of space-separated integers to sort:")
 
-  ;; Read and parse user input
   (let [user-input (read-line)
         input-array (vec (map #(Integer/parseInt %) (clojure.string/split user-input #"\s+")))]
 
     (println "\nInput array:" input-array)
 
-    ;; Helper functions for selection sort
     (letfn [(find-min-index [arr start]
-              ;; Find the index of the minimum element in the sub-array starting from index `start`
               (loop [min-idx start
                      i (inc start)]
                 (if (>= i (count arr))
@@ -427,11 +470,9 @@
                   (recur (if (< (arr i) (arr min-idx)) i min-idx) (inc i)))))
 
             (swap [arr i j]
-              ;; Swap elements at indices `i` and `j` in the array
               (let [temp (arr i)]
                 (assoc arr i (arr j) j temp)))
 
-            ;; Main selection sort helper function
             (selection-sort-helper [arr]
               (println "\nPerforming Selection Sort:")
               (loop [i 0
@@ -447,22 +488,18 @@
                     (println (str "  Array after step " (inc i) ": " new-arr))
                     (recur (inc i) new-arr)))))]
       
-      ;; Execute selection sort and display the sorted array
       (let [sorted-array (selection-sort-helper input-array)]
-        (println "\nSorted array:" sorted-array)))))
+        (println "\nSorted array:" sorted-array)
+        (println "The best-case time complexity for the selection sort algorithm is O(n^2) and the worst-case time complexity for the selection sort algorithm is O(n^2)")
+        (println "The space complexity for the selection sort algorithm is O(1)")))))
 
-;; To run this function, call (selection-sort)
-
-;;//////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////DIJKSTRA'S SHORTEST PATH//////////////////////////////////////////////////
 (defn dijkstra []
-  ;; Prompt user for input
   (println "Please enter the number of vertices:")
   (let [num-vertices (Integer/parseInt (read-line))
         
-        ;; Initialize graph representation as a vector of maps
         graph (vec (repeat num-vertices {}))]
 
-    ;; Read edges from the user
     (println "Enter the edges in the format 'source destination weight' (one per line). Enter 'done' when finished:")
     (let [graph (loop [g graph]
                   (let [input (read-line)]
@@ -472,16 +509,13 @@
                             updated-graph (assoc g src (assoc (get g src {}) dst weight))]
                         (recur updated-graph)))))]
 
-      ;; Display the graph
       (println "\nGraph representation:")
       (doseq [i (range num-vertices)]
         (println (str "Vertex " i ": " (get graph i))))
 
-      ;; Prompt user for the source vertex
       (println "\nPlease enter the source vertex:")
       (let [source (Integer/parseInt (read-line))]
 
-        ;; Helper function to find the vertex with the minimum distance
         (letfn [(min-distance [dist visited]
                   (reduce (fn [min-idx v]
                             (if (or (contains? visited v)
@@ -491,13 +525,11 @@
                           (first (remove visited (range num-vertices)))
                           (remove visited (range num-vertices))))]
 
-          ;; Initialize distance and previous arrays
           (let [distances (vec (repeat num-vertices Double/POSITIVE_INFINITY))
                 distances (assoc distances source 0)
                 previous (vec (repeat num-vertices nil))
                 visited #{}]
 
-            ;; Dijkstra's algorithm visualization
             (println "\nRunning Dijkstra's Algorithm:")
             (loop [dist distances
                    prev previous
@@ -532,18 +564,14 @@
                                              neighbors)]
                     (recur updated-dist updated-prev (conj visited u))))))))))))
 
-;; To run this function, call (dijkstra)
 
-;;//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////KRUSKAL'S MINIMUM SPANNING TREE//////////////////////////////////////////////////
 (defn kruskal-mst []
-  ;; Prompt user for input
   (println "Please enter the number of vertices:")
   (let [num-vertices (Integer/parseInt (read-line))
         
-        ;; Initialize edge list
         edges []]
 
-    ;; Read edges from the user
     (println "Enter the edges in the format 'source destination weight' (one per line). Enter 'done' when finished:")
     (let [edges (loop [e edges]
                   (let [input (read-line)]
@@ -552,14 +580,11 @@
                       (let [[src dst weight] (map #(Integer/parseInt %) (clojure.string/split input #"\s+"))]
                         (recur (conj e [src dst weight]))))))]
 
-      ;; Display the edge list
       (println "\nEdge List:")
       (doseq [edge edges]
         (println (str "Edge: " edge)))
 
-      ;; Helper functions for Kruskal's Algorithm
       (letfn [(find [parent v]
-                ;; Recursively find the root with path compression
                 (let [root (get parent v v)]
                   (if (= root v)
                     v
@@ -567,7 +592,6 @@
                       new-parent))))
 
               (union [parent rank u v]
-                ;; Union by rank of two sets containing u and v
                 (let [root-u (find parent u)
                       root-v (find parent v)]
                   (if (not= root-u root-v)
@@ -579,17 +603,14 @@
                          (assoc rank root-u (inc (get rank root-u 0)))]))
                     [parent rank])))]
 
-        ;; Initialize parent and rank maps for all vertices
         (let [parent (into {} (map (fn [v] [v v]) (range num-vertices)))
               rank (into {} (map (fn [v] [v 0]) (range num-vertices)))]
 
-          ;; Sort edges by weight
           (let [sorted-edges (sort-by #(nth % 2) edges)]
             (println "\nEdges sorted by weight:")
             (doseq [edge sorted-edges]
               (println edge))
 
-            ;; Kruskal's algorithm visualization
             (println "\nConstructing Minimum Spanning Tree using Kruskal's Algorithm:")
             (loop [mst []
                    mst-weight 0
@@ -599,7 +620,6 @@
               (if (or (empty? edge-list)
                       (= (count mst) (dec num-vertices)))
                 (do
-                  ;; MST construction complete
                   (println "\nMinimum Spanning Tree (MST):")
                   (doseq [edge mst]
                     (println (str "Edge: " edge)))
@@ -607,7 +627,6 @@
                   [mst mst-weight])
                 (let [[u v w] (first edge-list)
                       rest-edges (rest edge-list)
-                      ;; Safe find for both vertices
                       root-u (find parent u)
                       root-v (find parent v)]
                   (if (not= root-u root-v)
@@ -622,43 +641,34 @@
                       (println (str "Skipping edge " [u v w] " (would form a cycle)"))
                       (recur mst mst-weight rest-edges parent rank))))))))))))
 
-;; To run this function, call (kruskal-mst)
 
 
-;;///////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////LINEAR SEARCH//////////////////////////////////////////////////
 (defn linear-search []
-  ;; Prompt user for input array
   (println "Please enter the array elements as space-separated integers:")
   (let [input-array (map #(Integer/parseInt %)
                           (clojure.string/split (read-line) #"\s+"))
         
-        ;; Prompt user for the target value
         _ (println "Please enter the target value:")
         target (Integer/parseInt (read-line))]
 
-    ;; Visualize each step of the linear search
     (println "\nStarting Linear Search:")
     (loop [index 0]
       (if (< index (count input-array))
         (let [current-value (nth input-array index)]
-          ;; Display current step and comparison
           (println (str "Checking index " index " (value: " current-value ")"))
 
           (if (= current-value target)
             (do
-              ;; If the target is found
               (println (str "Target " target " found at index " index))
               index)
-            ;; Continue searching
             (recur (inc index))))
-        ;; If the target is not found
         (do
           (println (str "Target " target " not found in the array"))
           -1)))))
 
-;; To run this function, call (linear-search)
 
-;;///////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////BINARY SEARCH TREE//////////////////////////////////////////////////
 (defn visualize-bst
   "Creates a binary search tree and visualizes its construction step by step,
    including the array and the tree's structure."
@@ -703,7 +713,7 @@
           tree)))))
 
 
-;;//////////////////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////AVL TREE//////////////////////////////////////////////////
 (defn visualize-avl
   "Creates an AVL tree and visualizes its construction step by step,
    including the array, the tree's structure, and balance adjustments."
@@ -731,22 +741,19 @@
                   (assoc-in [:left] (update-height (:left right))))))
           (balance [node]
             (let [bf (balance-factor node)]
-              (cond
-                ;; Left heavy
+              (cond 
                 (> bf 1)
                 (if (< (balance-factor (:left node)) 0)
                   (-> node
                       (assoc :left (rotate-left (:left node)))
                       rotate-right)
                   (rotate-right node))
-                ;; Right heavy
                 (< bf -1)
                 (if (> (balance-factor (:right node)) 0)
                   (-> node
                       (assoc :right (rotate-right (:right node)))
                       rotate-left)
                   (rotate-left node))
-                ;; Balanced
                 :else (update-height node))))
           (insert [tree value]
             (if tree
@@ -790,7 +797,7 @@
 
 
 
-;;////////////////////////////////////////////////////////////////////////////////////////////////////
+;;//////////////////////////////////////////////////RED-BLACK TREE//////////////////////////////////////////////////
 (defn visualize-rbt
   "Creates a Red-Black Tree (RBT) and visualizes its construction step by step,
    including the array, tree structure, and color balancing."
@@ -835,8 +842,8 @@
                     right (tree->string (:right node) (inc depth))
                     value-str (str (apply str (repeat (* 2 depth) " "))
                                    (if (= (:color node) :red)
-                                     (str "[" (:value node) "]")  ; Red node: square brackets
-                                     (str "(" (:value node) ")")))] ; Black node: parentheses
+                                     (str "[" (:value node) "]")
+                                     (str "(" (:value node) ")")))]
                 (str left "\n" value-str "\n" right))
               ""))
           (sorted-array [node]
@@ -877,34 +884,35 @@
   5: Quick Sort
   6: Selection Sort
 
-  To visualize searching algorithms and trees
+  To visualize searching algorithms:
   7: Binary Search
   8: Linear Search
-  9: AVL Tree
-  10: Binary Search Tree
-  11: Breadth-First Search
-  12: Depth-First Search
-  13: Dijkstra's Shortest Path
+  9: Breadth-First Search
+  10: Depth-First Search
+  11: Dijkstra's Shortest Path
+  
+  To visualize Tree Algorithms:
+  12: AVL Tree
+  13: Binary Search Tree
   14: Kruskal's Minimum Spanning Tree
-  15: Red-Black Trees")
+  15: Red-Black Tree")
   (let [input (read-line)]
     (cond
-      (= input "1") (bubble-sort)
+      (= input "1") (bubble-sort-visualizer)
       (= input "2") (heap-sort)
-      (= input "3") (insertion-sort)
-      (= input "4") (merge-sort)
-      (= input "5") (quick-sort)
+      (= input "3") (insertion-sort-visualizer)
+      (= input "4") (merge-sort-visualizer)
+      (= input "5") (quick-sort-visualizer)
       (= input "6") (selection-sort)
       (= input "7") (binary-search)
       (= input "8") (linear-search)
-      (= input "9") (visualize-avl [7 4 9 1 5 8])
-      (= input "10") (visualize-bst [53 22 12 34 56])
-      (= input "11") (breadth-first-search)
-      (= input "12") (depth-first-search) 
-      (= input "13") (dijkstra) 
+      (= input "9") (visualize-bfs)
+      (= input "10") (visualize-dfs)
+      (= input "11") (dijkstra)
+      (= input "12") (visualize-avl [7 4 9 1 5 8]) 
+      (= input "13") (visualize-bst [53 22 12 34 56]) 
       (= input "14") (kruskal-mst)
       (= input "15") (visualize-rbt [42 12 87 36 11])
       :else (println "Invalid input. Please enter a number between 1 and 15 and try again."))))
 
-;; To run the program, call the -main function
 (-main)
